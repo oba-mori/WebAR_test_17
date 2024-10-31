@@ -65,33 +65,94 @@
 <html lang="en">
 
 <head>
-	<title>15 three.js ar - hit test</title>
+	<title>17 three.js ar - hit test</title>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 	<link type="text/css" rel="stylesheet" href="main.css">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+      <style>
+          #marker {
+              position: absolute;
+              width: 10px;
+              height: 10px;
+              background: red;
+              border-radius: 50%;
+              display: none;
+              pointer-events: none; /* マーカーをタッチ操作の対象外にする */
+          }
+      </style>  
 </head>
 
 <body>
 
 
-  <div id="marker" style="position: absolute; width: 10px; height: 10px; background: red; border-radius: 50%; display: none;"></div>
-  <script>
-    const marker = document.getElementById('marker');
+
+
+
+
+
+      <div id="marker"></div>
   
-    // タッチイベントリッスン
-    window.addEventListener('touchstart', (event) => {
-      const touch = event.touches[0];
-      // タッチ位置にマーカーを表示
-      marker.style.left = `${touch.clientX - 5}px`; // -5はマーカーの中心に位置を合わせるための調整
-      marker.style.top = `${touch.clientY - 5}px`;
-      marker.style.display = 'block';
-    });
+      <script>
+          const marker = document.getElementById('marker');
   
-    // タッチ終了でマーカーを非表示
-    window.addEventListener('touchend', () => {
-      marker.style.display = 'none';
-    });
-  </script>
+          // タッチイベントリッスン
+          window.addEventListener('touchstart', (event) => {
+              const touch = event.touches[0];
+              // タッチ位置にマーカーを表示
+              marker.style.left = `${touch.clientX - 5}px`;
+              marker.style.top = `${touch.clientY - 5}px`;
+              marker.style.display = 'block';
+          });
+  
+          window.addEventListener('touchmove', (event) => {
+              const touch = event.touches[0];
+              marker.style.left = `${touch.clientX - 5}px`;
+              marker.style.top = `${touch.clientY - 5}px`;
+          });
+  
+          window.addEventListener('touchend', () => {
+              marker.style.display = 'none';
+          });
+  
+          // DOMの変化を監視するためのMutationObserver
+          const targetNode = document.body; // 監視したい要素を指定
+  
+          const observerCallback = (mutationsList, observer) => {
+              for (let mutation of mutationsList) {
+                  if (mutation.type === 'childList') {
+                      console.log('子ノードの変更が検出されました:', mutation);
+                  }
+              }
+          };
+  
+          const config = { childList: true, subtree: true }; // 監視オプションを設定
+          const observer = new MutationObserver(observerCallback); // MutationObserverのインスタンスを作成
+          observer.observe(targetNode, config); // 監視を開始
+      </script>
+
+
+
+
+
+
+
+
 
 
 
