@@ -1,152 +1,203 @@
-<!-- 
-	WebAR_test_15
-
-	
-	
-
-	ソースコードを参考にGLTF形式の3Dモデルを取り込み表示
-	hittest
-	平面を検知して、画面をタップした時に、サークルの位置に3Dモデルが表示される
-	タップしたら表示され、前の物は消える → 移動しているように見せる
-
-	r11:複数種類の3Dモデルを表示(ボタンで切換)
-			(smallはタップした分生成、mediumはタップするごとに移動)
-
-	切替ボタンがARカメラの映像で隠れてしまう、映像の上に重ねたい
-
-
-	r12:
-	13:モデル二つの表示非表示をそれぞれボタンで制御
-	14:モデルの明るさ変更(モデル2のみ)
-	15:overlay1の高さがタッチの前後で変化してしまうため、修正中
-  16:ミス
-	17:
-
-
-
-
-	main.cssコメントアウト
-
-	ソースコード
-	https://github.com/mrdoob/three.js/blob/master/examples/jsm/webxr/ARButton.js
-	
-
-
-	・複数の3Dモデルを表示する場合
-	3Dファイルを用意します。
-	loadModel()関数を複製し、新しい関数を作成します。例えば、loadModel2()という関数を作成します。
-	複製した関数内のloader.load()メソッドの第1引数に、新しい3Dファイルのパスを指定します。
-	複製した関数内のscene.add()メソッドの引数に、新しいモデルを追加します。
-	新しい関数を呼び出すためのイベントリスナーを設定します。例えば、controller.addEventListener('select', loadModel2);というようにします。
-
-
-	
--->
-
-
-
-<!-- 
-	WebAR_test_9
-
-	ソースコードを参考にGLTF形式の3Dモデルを取り込み表示
-	hittest
-	平面を検知して、画面をタップした時に、サークルの位置に3Dモデルが表示される
-	タップしたら表示され、前の物は消える → 移動しているように見せる
-
-	ソースコード
-	https://github.com/mrdoob/three.js/blob/master/examples/jsm/webxr/ARButton.js
-	
--->
-
-
-
-
-
-
-
-  
-
-
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-
-  <link type="text/css" rel="stylesheet" href="main.css">
-  
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>17 three.js ar - hit test</title>
-
-    <style>
-        canvas { display: block; }
-        #marker {
-            position: absolute;
-            width: 10px;
-            height: 10px;
-            background: red;
-            border-radius: 50%;
-            display: none;
-        }
-    </style>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <link type="text/css" rel="stylesheet" href="main.css">
 </head>
+
 <body>
-    <div id="marker"></div>
-    <script src="https://threejs.org/build/three.js"></script>
-    <script src="https://threejs.org/examples/js/loaders/GLTFLoader.js"></script>
-    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
-    <script src="https://aframe.io/releases/1.2.0/aframe-ar.js"></script>
+    <script async src="https://unpkg.com/es-module-shims@1.3.6/dist/es-module-shims.js"></script>
 
-    <script>
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer({ alpha: true });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        document.body.appendChild(renderer.domElement);
-
-        const loader = new THREE.GLTFLoader();
-
-        // タッチイベントリスナー
-        window.addEventListener('touchstart', (event) => {
-            const touch = event.touches[0];
-            const marker = document.getElementById('marker');
-            marker.style.left = `${touch.clientX - 5}px`;
-            marker.style.top = `${touch.clientY - 5}px`;
-            marker.style.display = 'block';
-
-            // 2Dタッチ位置を3D空間に変換
-            const rect = renderer.domElement.getBoundingClientRect();
-            const x = ((touch.clientX - rect.left) / rect.width) * 2 - 1;
-            const y = -((touch.clientY - rect.top) / rect.height) * 2 + 1;
-
-            // Raycasterを使ってオブジェクトを配置
-            const raycaster = new THREE.Raycaster();
-            const mouse = new THREE.Vector2(x, y);
-            raycaster.setFromCamera(mouse, camera);
-
-            // 衝突オブジェクトの取得
-            const intersects = raycaster.intersectObjects(scene.children);
-            if (intersects.length > 0) {
-                const point = intersects[0].point;
-                // オブジェクトを配置
-                loader.load('cube_small.glb', (gltf) => {
-                    const object = gltf.scene;
-                    object.position.copy(point);
-                    scene.add(object);
-                });
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three/build/three.module.js"
             }
-        });
+        }
+    </script>
 
-        // アニメーションループ
+    <script type="module">
+        import * as THREE from 'three';
+        import { GLTFLoader } from './GLTFLoader.js';
+        import { ARButton } from './ARButton.js';
+
+        let container;
+        let camera, scene, renderer;
+        let controller;
+        let reticle;
+        let hitTestSource = null;
+        let hitTestSourceRequested = false;
+
+        let arButton = new ARButton();
+        init();
+        animate();
+
+        function init() {
+            container = document.createElement('div');
+            document.body.appendChild(container);
+
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 20);
+
+            const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
+            light.position.set(0.5, 1, 0.25);
+            scene.add(light);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.xr.enabled = true;
+            container.appendChild(renderer.domElement);
+
+            const button = document.createElement('button');
+            button.id = 'toggleButton';
+            button.style.position = 'absolute';
+            button.style.top = '50%';
+            button.style.left = '50%';
+            button.style.transform = 'translate(-50%, -50%)';
+            button.style.zIndex = '9999';
+            button.textContent = 'ボタン (有効)';
+            container.appendChild(button);
+
+            document.body.appendChild(ARButton.createButton(renderer, { requiredFeatures: ['hit-test'] }));
+
+            const geometry = new THREE.CylinderGeometry(0.1, 0.1, 0.2, 32).translate(0, 0.1, 0);
+
+            let currentModel1 = null;
+
+            function loadModel1() {
+                if (currentModel1) scene.remove(currentModel1);
+
+                const loader = new GLTFLoader();
+                loader.load(
+                    'cube_small.glb',
+                    function (gltf) {
+                        const model = gltf.scene;
+                        const position = new THREE.Vector3();
+                        const quaternion = new THREE.Quaternion();
+                        const scale = new THREE.Vector3();
+
+                        const materials = model.children[0].material;
+                        materials.emissive = new THREE.Color(0.5, 0.5, 0.5);
+                        model.children[0].material = materials;
+
+                        reticle.matrix.decompose(position, quaternion, scale);
+                        model.position.copy(position);
+                        model.quaternion.copy(quaternion);
+                        model.scale.copy(scale);
+                        scene.add(model);
+                        currentModel1 = model;
+                    },
+                    function (xhr) {
+                        console.log((xhr.loaded / xhr.total) * 100 + '% loaded');
+                    },
+                    function (error) {
+                        console.error('An error happened', error);
+                    }
+                );
+            }
+
+            let currentModel2 = null;
+
+            function loadModel2() {
+                if (currentModel2) scene.remove(currentModel2);
+
+                const loader = new GLTFLoader();
+                loader.load(
+                    'cube_medium.glb',
+                    function (gltf) {
+                        const model = gltf.scene;
+                        const position = new THREE.Vector3();
+                        const quaternion = new THREE.Quaternion();
+                        const scale = new THREE.Vector3();
+
+                        const materials = model.children[0].material;
+                        materials.emissive = new THREE.Color(0.5, 0.5, 0.5);
+                        model.children[0].material = materials;
+
+                        reticle.matrix.decompose(position, quaternion, scale);
+                        model.position.copy(position);
+                        model.quaternion.copy(quaternion);
+                        model.scale.copy(scale);
+                        scene.add(model);
+                        currentModel2 = model;
+                    },
+                    function (xhr) {
+                        console.log((xhr.loaded / xhr.total) * 100 + '% loaded');
+                    },
+                    function (error) {
+                        console.error('An error happened', error);
+                    }
+                );
+            }
+
+            controller = renderer.xr.getController(0);
+            controller.addEventListener('select', loadModel1);
+            controller.addEventListener('select', loadModel2);
+
+            document.addEventListener('m1_event', function () {
+                if (ARButton.model1_display === 0) {
+                    controller.removeEventListener('select', loadModel1);
+                } else {
+                    controller.addEventListener('select', loadModel1);
+                }
+            });
+
+            document.addEventListener('m2_event', function () {
+                if (ARButton.model2_display === 0) {
+                    controller.removeEventListener('select', loadModel2);
+                } else {
+                    controller.addEventListener('select', loadModel2);
+                }
+            });
+
+            reticle = new THREE.Mesh(new THREE.RingGeometry(0.1, 0.15, 32), new THREE.MeshBasicMaterial({ color: 0xffff00 }));
+            reticle.rotation.x = -Math.PI / 2;
+            scene.add(reticle);
+        }
+
         function animate() {
-            requestAnimationFrame(animate);
+            renderer.setAnimationLoop(render);
+        }
+
+        function render() {
+            if (hitTestSourceRequested) {
+                const session = renderer.xr.getSession();
+                if (session) {
+                    const referenceSpace = session.referenceSpace;
+                    session.requestHitTestSource({ space: referenceSpace })
+                        .then(source => {
+                            hitTestSource = source;
+                        });
+                }
+                hitTestSourceRequested = false;
+            }
+
+            const controller = renderer.xr.getController(0);
+            const matrix = new THREE.Matrix4();
+            const userData = controller.userData;
+
+            if (hitTestSource) {
+                const hitTestResults = controller.getHitTestResults(hitTestSource);
+                if (hitTestResults.length) {
+                    const hit = hitTestResults[0];
+                    const position = new THREE.Vector3();
+                    const quaternion = new THREE.Quaternion();
+                    hit.getPose(controller.matrixWorld, position, quaternion);
+                    reticle.position.copy(position);
+                    reticle.quaternion.copy(quaternion);
+                    reticle.visible = true;
+                } else {
+                    reticle.visible = false;
+                }
+            }
+
             renderer.render(scene, camera);
         }
-        animate();
     </script>
 </body>
+
 </html>
-
-
-
-
-
