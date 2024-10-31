@@ -61,103 +61,92 @@
 
 
 
+
+
+
+  
+
+
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-	<title>17 three.js ar - hit test</title>
-	<meta charset="utf-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-	<link type="text/css" rel="stylesheet" href="main.css">
 
+  <link type="text/css" rel="stylesheet" href="main.css">
+  
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>17 three.js ar - hit test</title>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-      <style>
-          #marker {
-              position: absolute;
-              width: 10px;
-              height: 10px;
-              background: red;
-              border-radius: 50%;
-              display: none;
-              pointer-events: none; /* マーカーをタッチ操作の対象外にする */
-          }
-      </style>  
+    <style>
+        canvas { display: block; }
+        #marker {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: red;
+            border-radius: 50%;
+            display: none;
+        }
+    </style>
 </head>
-
 <body>
+    <div id="marker"></div>
+    <script src="https://threejs.org/build/three.js"></script>
+    <script src="https://threejs.org/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+    <script src="https://aframe.io/releases/1.2.0/aframe-ar.js"></script>
 
+    <script>
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
 
+        const loader = new THREE.GLTFLoader();
 
+        // タッチイベントリスナー
+        window.addEventListener('touchstart', (event) => {
+            const touch = event.touches[0];
+            const marker = document.getElementById('marker');
+            marker.style.left = `${touch.clientX - 5}px`;
+            marker.style.top = `${touch.clientY - 5}px`;
+            marker.style.display = 'block';
 
+            // 2Dタッチ位置を3D空間に変換
+            const rect = renderer.domElement.getBoundingClientRect();
+            const x = ((touch.clientX - rect.left) / rect.width) * 2 - 1;
+            const y = -((touch.clientY - rect.top) / rect.height) * 2 + 1;
 
+            // Raycasterを使ってオブジェクトを配置
+            const raycaster = new THREE.Raycaster();
+            const mouse = new THREE.Vector2(x, y);
+            raycaster.setFromCamera(mouse, camera);
 
+            // 衝突オブジェクトの取得
+            const intersects = raycaster.intersectObjects(scene.children);
+            if (intersects.length > 0) {
+                const point = intersects[0].point;
+                // オブジェクトを配置
+                loader.load('cube_small.glb', (gltf) => {
+                    const object = gltf.scene;
+                    object.position.copy(point);
+                    scene.add(object);
+                });
+            }
+        });
 
-      <div id="marker"></div>
-  
-      <script>
-          const marker = document.getElementById('marker');
-  
-          // タッチイベントリッスン
-          window.addEventListener('touchstart', (event) => {
-              const touch = event.touches[0];
-              // タッチ位置にマーカーを表示
-              marker.style.left = `${touch.clientX - 5}px`;
-              marker.style.top = `${touch.clientY - 5}px`;
-              marker.style.display = 'block';
-          });
-  
-          window.addEventListener('touchmove', (event) => {
-              const touch = event.touches[0];
-              marker.style.left = `${touch.clientX - 5}px`;
-              marker.style.top = `${touch.clientY - 5}px`;
-          });
-  
-          window.addEventListener('touchend', () => {
-              marker.style.display = 'none';
-          });
-  
-          // DOMの変化を監視するためのMutationObserver
-          const targetNode = document.body; // 監視したい要素を指定
-  
-          const observerCallback = (mutationsList, observer) => {
-              for (let mutation of mutationsList) {
-                  if (mutation.type === 'childList') {
-                      console.log('子ノードの変更が検出されました:', mutation);
-                  }
-              }
-          };
-  
-          const config = { childList: true, subtree: true }; // 監視オプションを設定
-          const observer = new MutationObserver(observerCallback); // MutationObserverのインスタンスを作成
-          observer.observe(targetNode, config); // 監視を開始
-      </script>
-
-
-
-
-
-
-
-
-
-
-
-
-  
+        // アニメーションループ
+        function animate() {
+            requestAnimationFrame(animate);
+            renderer.render(scene, camera);
+        }
+        animate();
+    </script>
 </body>
-
 </html>
+
+
+
+
+
