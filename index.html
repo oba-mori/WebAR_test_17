@@ -1,4 +1,11 @@
 <!DOCTYPE html>
+<!-- 
+タッチした場所にオブジェクト移動
+失敗
+
+
+-->
+
 <html lang="en">
 
 <head>
@@ -90,12 +97,15 @@
                         model.scale.copy(scale);
                         scene.add(model);
                         currentModel1 = model;
+
+                        console.log('モデルが追加されました:', position);
                     },
                     function (xhr) {
                         console.log((xhr.loaded / xhr.total) * 100 + '% loaded');
                     },
                     function (error) {
                         console.error('An error happened', error);
+                        console.error('モデルの読み込みに失敗:', error);
                     }
                 );
             }
@@ -134,8 +144,27 @@
                 );
             }
 
+            
+
+
+
+
             controller = renderer.xr.getController(0);
-            controller.addEventListener('select', loadModel1);
+
+            // controller.addEventListener('select', loadModel1);
+
+            //上記を確認
+            controller.addEventListener('select', function() {
+                console.log('コントローラーが選択されました');
+                loadModel1(); // またはloadModel2()
+            });
+                        
+
+
+
+
+
+            //一時的にモデル2非表示
             //controller.addEventListener('select', loadModel2);
 
             document.addEventListener('m1_event', function () {
@@ -163,6 +192,15 @@
             renderer.setAnimationLoop(render);
         }
 
+
+
+        // スフィアの初期化を関数の外で行います
+const reticleSphere = new THREE.Mesh(
+    new THREE.SphereGeometry(0.05, 16, 16),
+    new THREE.MeshBasicMaterial({ color: 0xff0000 }) // 赤色
+);
+scene.add(reticleSphere); // シーンに追加
+
         function render() {
             if (hitTestSourceRequested) {
                 const session = renderer.xr.getSession();
@@ -187,11 +225,22 @@
                     const position = new THREE.Vector3();
                     const quaternion = new THREE.Quaternion();
                     hit.getPose(controller.matrixWorld, position, quaternion);
+
                     reticle.position.copy(position);
                     reticle.quaternion.copy(quaternion);
                     reticle.visible = true;
+
+                    // ヒットテストが成功した場合のログ出力
+                    console.log('ヒットテストが成功:', position);
+
+                    // ヒット位置をスフィアで表示
+            reticleSphere.position.copy(position);
+            reticleSphere.visible = true; // スフィアを表示
+
                 } else {
                     reticle.visible = false;
+                    reticleSphere.visible = false; // ヒットテストに失敗したらスフィアを非表示
+                    console.log('ヒットテストに失敗しました');
                 }
             }
 
