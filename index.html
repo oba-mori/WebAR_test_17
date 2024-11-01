@@ -1,5 +1,5 @@
 <!-- 
-	WebAR_test_15
+	WebAR_test_17
 
 	
 	
@@ -140,6 +140,38 @@
 
 
 
+
+    //新
+    // タッチ位置を3D空間に変換する関数
+    function getTouchPosition(touch) {
+        const rect = renderer.domElement.getBoundingClientRect();
+        const x = ((touch.clientX - rect.left) / rect.width) * 2 - 1;
+        const y = -((touch.clientY - rect.top) / rect.height) * 2 + 1;
+
+        // 2D座標を3D座標に変換
+        const vector = new THREE.Vector3(x, y, 0.5); // zは適当な値
+        vector.unproject(camera); // カメラからワールド座標に変換
+
+        const dir = vector.sub(camera.position).normalize(); // カメラからの方向を計算
+        const distance = -camera.position.z / dir.z; // z=0での交点を計算
+        const position = camera.position.clone().add(dir.multiplyScalar(distance)); // 交点の計算
+
+        // タッチ位置をコンソールに表示
+        console.log('タッチ位置:', touch.clientX, touch.clientY); // スクリーン座標を表示
+        console.log('ワールド座標:', worldPosition); // 3D空間の位置を表示
+
+        return position;
+    }
+
+
+
+
+
+
+
+
+
+
 		// 関数読み込み
 		init();
 		animate();
@@ -246,10 +278,20 @@
 						model.children[0].material = materials;
 
 
-						reticle.matrix.decompose(position, quaternion, scale);
-						model.position.copy(position);
-						model.quaternion.copy(quaternion);
-						model.scale.copy(scale);
+            //新
+            // タッチ位置を取得してモデルの位置を設定
+            const touch = controller.getEvent('select'); // コントローラーの選択イベントからタッチを取得
+            const worldPosition = getTouchPosition(touch); // 3D空間の位置を取得
+            model.position.copy(worldPosition); // モデルの位置を設定
+
+            //旧
+            // //モデルの位置と回転、スケール
+						// reticle.matrix.decompose(position, quaternion, scale);
+						// model.position.copy(position);
+						// model.quaternion.copy(quaternion);
+						// model.scale.copy(scale);
+
+
 						// シーンにモデルを追加
 						scene.add(model);
 
@@ -343,9 +385,13 @@
 
 			// モデル1
 			controller.addEventListener('select', loadModel1);
-			// モデル2
-			controller.addEventListener('select', removeMode2);	//古いモデルを消す
-			controller.addEventListener('select', loadModel2);	//新しいモデルを表示
+			
+
+      //一時的に非表示
+      // 旧
+      // // モデル2
+			// controller.addEventListener('select', removeMode2);	//古いモデルを消す
+			// controller.addEventListener('select', loadModel2);	//新しいモデルを表示
 
 
 
