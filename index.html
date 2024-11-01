@@ -196,57 +196,115 @@
 
         // スフィアの初期化を関数の外で行います
 const reticleSphere = new THREE.Mesh(
-    new THREE.SphereGeometry(0.05, 16, 16),
+    new THREE.SphereGeometry(0.005, 8, 8),
     new THREE.MeshBasicMaterial({ color: 0xff0000 }) // 赤色
 );
 scene.add(reticleSphere); // シーンに追加
+reticleSphere.visible = false; // 初期状態では非表示
+
+
+let lastHitPosition = null; // 最後のヒット位置を保存
+
+
+
+        // function render() {
+        //     if (hitTestSourceRequested) {
+        //         const session = renderer.xr.getSession();
+        //         if (session) {
+        //             const referenceSpace = session.referenceSpace;
+        //             session.requestHitTestSource({ space: referenceSpace })
+        //                 .then(source => {
+        //                     hitTestSource = source;
+        //                 });
+        //         }
+        //         hitTestSourceRequested = false;
+        //     }
+
+        //     const controller = renderer.xr.getController(0);
+        //     const matrix = new THREE.Matrix4();
+        //     const userData = controller.userData;
+
+        //     if (hitTestSource) {
+        //         const hitTestResults = controller.getHitTestResults(hitTestSource);
+        //         if (hitTestResults.length) {
+        //             const hit = hitTestResults[0];
+        //             const position = new THREE.Vector3();
+        //             const quaternion = new THREE.Quaternion();
+        //             hit.getPose(controller.matrixWorld, position, quaternion);
+
+        //             reticle.position.copy(position);
+        //             reticle.quaternion.copy(quaternion);
+        //             reticle.visible = true;
+
+        //             // ヒットテストが成功した場合のログ出力
+        //             console.log('ヒットテストが成功:', position);
+
+        //             // ヒット位置をスフィアで表示
+        //             reticleSphere.position.copy(position);
+        //             reticleSphere.visible = true; // スフィアを表示
+
+        //         } else {
+        //             reticle.visible = false;
+        //             reticleSphere.visible = false; // ヒットテストに失敗したらスフィアを非表示
+        //             console.log('ヒットテストに失敗しました');
+        //         }
+        //     }
+
+        //     renderer.render(scene, camera);
+        // }
 
         function render() {
-            if (hitTestSourceRequested) {
-                const session = renderer.xr.getSession();
-                if (session) {
-                    const referenceSpace = session.referenceSpace;
-                    session.requestHitTestSource({ space: referenceSpace })
-                        .then(source => {
-                            hitTestSource = source;
-                        });
-                }
-                hitTestSourceRequested = false;
-            }
+    // ヒットテストソースをリクエスト
+    if (!hitTestSource) {
+        const session = renderer.xr.getSession();
+        if (session) {
+            const referenceSpace = session.referenceSpace;
+            session.requestHitTestSource({ space: referenceSpace })
+                .then(source => {
+                    hitTestSource = source;
+                });
+        }
+    }
 
-            const controller = renderer.xr.getController(0);
-            const matrix = new THREE.Matrix4();
-            const userData = controller.userData;
+    const controller = renderer.xr.getController(0);
+    const matrix = new THREE.Matrix4();
+    const userData = controller.userData;
 
-            if (hitTestSource) {
-                const hitTestResults = controller.getHitTestResults(hitTestSource);
-                if (hitTestResults.length) {
-                    const hit = hitTestResults[0];
-                    const position = new THREE.Vector3();
-                    const quaternion = new THREE.Quaternion();
-                    hit.getPose(controller.matrixWorld, position, quaternion);
+    if (hitTestSource) {
+        const hitTestResults = controller.getHitTestResults(hitTestSource);
+        if (hitTestResults.length) {
+            const hit = hitTestResults[0];
+            const position = new THREE.Vector3();
+            const quaternion = new THREE.Quaternion();
+            hit.getPose(controller.matrixWorld, position, quaternion);
 
-                    reticle.position.copy(position);
-                    reticle.quaternion.copy(quaternion);
-                    reticle.visible = true;
+            // レティクルとスフィアの位置を更新
+            reticle.position.copy(position);
+            reticle.quaternion.copy(quaternion);
+            reticle.visible = true;
 
-                    // ヒットテストが成功した場合のログ出力
-                    console.log('ヒットテストが成功:', position);
-
-                    // ヒット位置をスフィアで表示
+            // ヒット位置をスフィアで表示
             reticleSphere.position.copy(position);
             reticleSphere.visible = true; // スフィアを表示
 
-                } else {
-                    reticle.visible = false;
-                    reticleSphere.visible = false; // ヒットテストに失敗したらスフィアを非表示
-                    console.log('ヒットテストに失敗しました');
-                }
-            }
-
-            renderer.render(scene, camera);
+        } else {
+            reticle.visible = false;
+            reticleSphere.visible = false; // ヒットテストに失敗したらスフィアを非表示
         }
+    }
+
+    renderer.render(scene, camera);
+}
+
+
+
+
+
+
+
     </script>
+
+
 </body>
 
 </html>
