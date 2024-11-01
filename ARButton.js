@@ -1,4 +1,11 @@
 // r5
+
+/*
+// 追加
+// カメラが起動したことをコンソールに表示
+console.log('ARカメラが起動しました');
+*/
+
 class ARButton {
 	// 追加	
 	static model1_display = 1;	//初期有効
@@ -214,6 +221,9 @@ class ARButton {
 				button.textContent = 'STOP AR';
 				sessionInit.domOverlay.root.style.display = '';
 
+        // カメラが起動したことをコンソールに表示
+        console.log('ARカメラが起動しました');
+
 				currentSession = session;
 
 			}
@@ -249,6 +259,7 @@ class ARButton {
 				button.style.opacity = '0.5';
 
 			};
+
 
 			button.onclick = function () {
 
