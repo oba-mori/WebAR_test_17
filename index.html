@@ -153,11 +153,11 @@
 
             // controller.addEventListener('select', loadModel1);
 
-            //上記を確認
-            controller.addEventListener('select', function() {
-                console.log('コントローラーが選択されました');
-                loadModel1(); // またはloadModel2()
-            });
+            // //上記を確認
+            // controller.addEventListener('select', function() {
+            //     console.log('コントローラーが選択されました');
+            //     loadModel1(); // またはloadModel2()
+            // });
                         
 
 
@@ -196,7 +196,7 @@
 
         // スフィアの初期化を関数の外で行います
 const reticleSphere = new THREE.Mesh(
-    new THREE.SphereGeometry(0.005, 8, 8),
+    new THREE.SphereGeometry(0.01, 8, 8),
     new THREE.MeshBasicMaterial({ color: 0xff0000 }) // 赤色
 );
 scene.add(reticleSphere); // シーンに追加
