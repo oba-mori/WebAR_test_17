@@ -141,27 +141,27 @@
 
 
 
-    //新
-    // タッチ位置を3D空間に変換する関数
-    function getTouchPosition(touch) {
-        const rect = renderer.domElement.getBoundingClientRect();
-        const x = ((touch.clientX - rect.left) / rect.width) * 2 - 1;
-        const y = -((touch.clientY - rect.top) / rect.height) * 2 + 1;
+    // //新
+    // // タッチ位置を3D空間に変換する関数
+    // function getTouchPosition(touch) {
+    //     const rect = renderer.domElement.getBoundingClientRect();
+    //     const x = ((touch.clientX - rect.left) / rect.width) * 2 - 1;
+    //     const y = -((touch.clientY - rect.top) / rect.height) * 2 + 1;
 
-        // 2D座標を3D座標に変換
-        const vector = new THREE.Vector3(x, y, 0.5); // zは適当な値
-        vector.unproject(camera); // カメラからワールド座標に変換
+    //     // 2D座標を3D座標に変換
+    //     const vector = new THREE.Vector3(x, y, 0.5); // zは適当な値
+    //     vector.unproject(camera); // カメラからワールド座標に変換
 
-        const dir = vector.sub(camera.position).normalize(); // カメラからの方向を計算
-        const distance = -camera.position.z / dir.z; // z=0での交点を計算
-        const position = camera.position.clone().add(dir.multiplyScalar(distance)); // 交点の計算
+    //     const dir = vector.sub(camera.position).normalize(); // カメラからの方向を計算
+    //     const distance = -camera.position.z / dir.z; // z=0での交点を計算
+    //     const position = camera.position.clone().add(dir.multiplyScalar(distance)); // 交点の計算
 
-        // タッチ位置をコンソールに表示
-        console.log('タッチ位置:', touch.clientX, touch.clientY); // スクリーン座標を表示
-        console.log('ワールド座標:', worldPosition); // 3D空間の位置を表示
+    //     // タッチ位置をコンソールに表示
+    //     console.log('タッチ位置:', touch.clientX, touch.clientY); // スクリーン座標を表示
+    //     console.log('ワールド座標:', worldPosition); // 3D空間の位置を表示
 
-        return position;
-    }
+    //     return position;
+    // }
 
 
 
@@ -200,259 +200,11 @@
 
 
 
-
-
-
-
-			// ボタンの作成と追加
-			const button = document.createElement('button');
-			button.id = 'toggleButton';
-			button.style.position = 'absolute';
-			button.style.top = '50%';
-			button.style.left = '50%';
-			button.style.transform = 'translate(-50%, -50%)';
-			button.style.zIndex = '9999';
-			button.textContent = 'ボタン (有効)';
-			container.appendChild(button);
-
-
-
-
-
-
-
-
-
 			// ARカメラ起動ボタン
 			document.body.appendChild(ARButton.createButton(renderer, { requiredFeatures: ['hit-test'] }));
 
 			//
-
 			const geometry = new THREE.CylinderGeometry(0.1, 0.1, 0.2, 32).translate(0, 0.1, 0);
-
-			// 不要
-			// コード内で3Dモデルを作成
-			function onSelect() {
-
-				if (reticle.visible) {
-
-					// 必要ないのでコメントアウト
-					const material = new THREE.MeshPhongMaterial({ color: 0xffffff * Math.random() });
-					const mesh = new THREE.Mesh(geometry, material);
-					reticle.matrix.decompose(mesh.position, mesh.quaternion, mesh.scale);
-					mesh.scale.y = Math.random() * 2 + 1;
-					scene.add(mesh);
-
-				}
-
-			}
-
-
-
-
-			// 3Dモデル1
-			// 下で使用するため
-			let currentModel1 = null; // currentModel1 変数を定義
-
-			// 新しく3Dモデルを表示する際、表示済みの3Dモデルを消す
-			function loadModel1() {
-				if (currentModel1) scene.remove(currentModel1); // 既存のモデルを削除
-
-				const loader = new GLTFLoader();
-
-				loader.load(
-					'cube_small.glb',
-					function (gltf) {
-						const model = gltf.scene;
-						const position = new THREE.Vector3();
-						const quaternion = new THREE.Quaternion();
-						const scale = new THREE.Vector3();
-
-
-						// 3Dモデルの明るさ設定
-						// マテリアル用の変数
-						const materials = model.children[0].material;
-						// マテリアルの明るさを調整
-						materials.emissive = new THREE.Color(0.5, 0.5, 0.5); // 発光を白に設定
-						// モデルに調整したマテリアルを適用
-						model.children[0].material = materials;
-
-
-            //新
-            // タッチ位置を取得してモデルの位置を設定
-            const touch = controller.getEvent('select'); // コントローラーの選択イベントからタッチを取得
-            const worldPosition = getTouchPosition(touch); // 3D空間の位置を取得
-            model.position.copy(worldPosition); // モデルの位置を設定
-
-            //旧
-            // //モデルの位置と回転、スケール
-						// reticle.matrix.decompose(position, quaternion, scale);
-						// model.position.copy(position);
-						// model.quaternion.copy(quaternion);
-						// model.scale.copy(scale);
-
-
-						// シーンにモデルを追加
-						scene.add(model);
-
-						currentModel1 = model; // 新しいモデルを保持
-					},
-					function (xhr) {
-						console.log((xhr.loaded / xhr.total) * 100 + '% loaded');
-					},
-					function (error) {
-						console.error('An error happened', error);
-					}
-				);
-			}
-
-
-
-
-			// 3Dモデル2
-			// 下で使用するため
-			let currentModel2 = null; // currentModel2 変数を定義
-
-
-
-			// 新しく3Dモデルを表示するため、表示済みの3Dモデルを消す
-			function removeMode2() {
-				return new Promise(resolve => {
-					if (currentModel1) {
-						scene.remove(currentModel2); // 古いモデルを削除
-						currentModel2 = null;
-					}
-					resolve();
-				});
-			}
-
-
-
-			// 新しく3Dモデルを表示する
-			function loadModel2() {
-				// if (currentModel2) scene.remove(currentModel2); // 既存のモデルを削除
-
-				const loader = new GLTFLoader();
-
-				loader.load(
-					'cube_medium.glb',
-					function (gltf) {
-						const model = gltf.scene;
-						const position = new THREE.Vector3();
-						const quaternion = new THREE.Quaternion();
-						const scale = new THREE.Vector3();
-
-
-						// 3Dモデルの明るさ設定
-						// マテリアル用の変数
-						const materials = model.children[0].material;
-						// マテリアルの明るさを調整
-						materials.emissive = new THREE.Color(0.5, 0.5, 0.5); // 発光を白に設定
-						// モデルに調整したマテリアルを適用
-						model.children[0].material = materials;
-
-
-						reticle.matrix.decompose(position, quaternion, scale);
-						model.position.copy(position);
-						model.quaternion.copy(quaternion);
-						model.scale.copy(scale);
-						// シーンにモデルを追加
-						scene.add(model);
-
-						currentModel2 = model; // 新しいモデルを保持
-					},
-					function (xhr) {
-						console.log((xhr.loaded / xhr.total) * 100 + '% loaded');
-					},
-					function (error) {
-						console.error('An error happened', error);
-					}
-				);
-			}
-
-
-
-
-
-
-			controller = renderer.xr.getController(0);
-			// // コード内で作成した3Dモデルを表示
-			// controller.addEventListener( 'select', onSelect );
-			// コード内で作成した3Dモデルを表示
-
-
-
-
-			// モデル1
-			controller.addEventListener('select', loadModel1);
-			
-
-      //一時的に非表示
-      // 旧
-      // // モデル2
-			// controller.addEventListener('select', removeMode2);	//古いモデルを消す
-			// controller.addEventListener('select', loadModel2);	//新しいモデルを表示
-
-
-
-			// モデル1
-			// カスタムイベントを受け取って条件を再評価する
-			function model1_event_fun() {
-				if (ARButton.model1_display === 0) {
-					controller.removeEventListener('select', loadModel1);
-					// toggleButton.textContent = 'ボタン (無効)';
-					console.log('確認 0');
-				} else {
-					controller.addEventListener('select', loadModel1);
-					// toggleButton.textContent = 'ボタン (有効)';
-					console.log('確認 1');
-				}
-			}
-
-			// カスタムイベントを監視して、ARButton.model1_display の値に応じて条件を再評価する
-			document.addEventListener('m1_event', model1_event_fun);
-
-
-
-
-
-
-
-			// モデル2
-			// カスタムイベントを受け取って条件を再評価する
-			function handleARButtonQChangedEvent() {
-				if (ARButton.model2_display === 0) {
-					controller.removeEventListener('select', loadModel2);
-					// toggleButton.textContent = 'ボタン (無効)';
-					console.log('確認 0');
-				} else {
-					controller.addEventListener('select', loadModel2);
-					// toggleButton.textContent = 'ボタン (有効)';
-					console.log('確認 1');
-				}
-			}
-
-			// カスタムイベントを監視して、ARButton.model2_display の値に応じて条件を再評価する
-			document.addEventListener('arButtonQChanged', handleARButtonQChangedEvent);
-
-
-
-
-
-
-
-			scene.add(controller);
-
-			reticle = new THREE.Mesh(
-				new THREE.RingGeometry(0.15, 0.2, 32).rotateX(- Math.PI / 2),
-				new THREE.MeshBasicMaterial()
-			);
-			reticle.matrixAutoUpdate = false;
-			reticle.visible = false;
-			scene.add(reticle);
-
-			//
-			window.addEventListener('resize', onWindowResize);
 
 		}
 
@@ -460,7 +212,7 @@
 
 
 
-
+    
 
 		function onWindowResize() {
 
@@ -472,68 +224,11 @@
 		}
 
 		//
-
 		function animate() {
 
 			renderer.setAnimationLoop(render);
 
 		}
-
-		function render(timestamp, frame) {
-
-			if (frame) {
-
-				const referenceSpace = renderer.xr.getReferenceSpace();
-				const session = renderer.xr.getSession();
-
-				if (hitTestSourceRequested === false) {
-
-					session.requestReferenceSpace('viewer').then(function (referenceSpace) {
-
-						session.requestHitTestSource({ space: referenceSpace }).then(function (source) {
-
-							hitTestSource = source;
-
-						});
-
-					});
-
-					session.addEventListener('end', function () {
-
-						hitTestSourceRequested = false;
-						hitTestSource = null;
-
-					});
-
-					hitTestSourceRequested = true;
-
-				}
-
-				if (hitTestSource) {
-
-					const hitTestResults = frame.getHitTestResults(hitTestSource);
-
-					if (hitTestResults.length) {
-
-						const hit = hitTestResults[0];
-
-						reticle.visible = true;
-						reticle.matrix.fromArray(hit.getPose(referenceSpace).transform.matrix);
-
-					} else {
-
-						reticle.visible = false;
-
-					}
-
-				}
-
-			}
-
-			renderer.render(scene, camera);
-
-		}
-
 	</script>
 </body>
 
