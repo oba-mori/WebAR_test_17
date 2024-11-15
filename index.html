@@ -20,7 +20,7 @@
 	14:モデルの明るさ変更(モデル2のみ)
 	15:overlay1の高さがタッチの前後で変化してしまうため、修正中
   16:ミス
-	17:
+	17:不要部分削除 試し
 
 
 
@@ -147,22 +147,40 @@
 
 		function init() {
 			
+      // div作成
 			container = document.createElement('div');
+      // 作成したdiv(container)をbodyに追加
 			document.body.appendChild(container);
 
+      // Three.jsにおける3D空間を表すクラスを宣言
+      // これ以降はsceneという変数を使用していく
 			scene = new THREE.Scene();
 
+      // Three.jsで3Dシーンを描画するためのカメラの作成
+      // new THREE.PerspectiveCamera(視野角, アスペクト比, 近クリッピング距離, 遠クリッピング距離);
 			camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 20);
 
+      // 半球状の光源を作成
+      // new THREE.HemisphereLight(空の色, 地面の色, 光の強度);
 			const light = new THREE.HemisphereLight(0xffffff, 0xbbbbff, 1);
+      // 光源の位置light.position.set(x, y, z);
 			light.position.set(0.5, 1, 0.25);
+      // 光源を3D空間に設置
 			scene.add(light);
 
-			//
+
+			// WebGLを使用して3Dシーンを描画するためのクラスを宣言(シーン、カメラ、ライト、マテリアル、ジオメトリなどの要素をレンダリングするために使われる)
+      // new THREE.WebGLRenderer({ アンチエイリアス: 有効, 背景透過: 有効 });
 			renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      // ユーザーのデバイスの画面解像度
+      // window.devicePixelRatio を渡すことで、レンダリングの解像度をデバイスに合わせて最適化
 			renderer.setPixelRatio(window.devicePixelRatio);
+      // Three.js のレンダラー（WebGLRenderer）に対して、レンダリングするキャンバスのサイズを指定する
+      // renderer.setSize(ブラウザウィンドウの幅 ブラウザウィンドウの高さ);
 			renderer.setSize(window.innerWidth, window.innerHeight);
+      // XR（拡張現実、エクステンデッド・リアリティ）機能の有効無効
 			renderer.xr.enabled = true;
+      // Three.js で作成したレンダラーの <canvas> 要素を HTML の指定した要素（この場合 container）に追加する
 			container.appendChild(renderer.domElement);
 
 
@@ -172,16 +190,16 @@
 
 
 
-			// ボタンの作成と追加
-			const button = document.createElement('button');
-			button.id = 'toggleButton';
-			button.style.position = 'absolute';
-			button.style.top = '50%';
-			button.style.left = '50%';
-			button.style.transform = 'translate(-50%, -50%)';
-			button.style.zIndex = '9999';
-			button.textContent = 'ボタン (有効)';
-			container.appendChild(button);
+			// // ボタンの作成と追加
+			// const button = document.createElement('button');
+			// button.id = 'toggleButton';
+			// button.style.position = 'absolute';
+			// button.style.top = '50%';
+			// button.style.left = '50%';
+			// button.style.transform = 'translate(-50%, -50%)';
+			// button.style.zIndex = '9999';
+			// button.textContent = 'ボタン (有効)';
+			// container.appendChild(button);
 
 
 
@@ -198,135 +216,135 @@
 
 			const geometry = new THREE.CylinderGeometry(0.1, 0.1, 0.2, 32).translate(0, 0.1, 0);
 
-			// 不要
-			// コード内で3Dモデルを作成
-			function onSelect() {
+			// // 不要
+			// // コード内で3Dモデルを作成
+			// function onSelect() {
 
-				if (reticle.visible) {
+			// 	if (reticle.visible) {
 
-					// 必要ないのでコメントアウト
-					const material = new THREE.MeshPhongMaterial({ color: 0xffffff * Math.random() });
-					const mesh = new THREE.Mesh(geometry, material);
-					reticle.matrix.decompose(mesh.position, mesh.quaternion, mesh.scale);
-					mesh.scale.y = Math.random() * 2 + 1;
-					scene.add(mesh);
+			// 		// 必要ないのでコメントアウト
+			// 		const material = new THREE.MeshPhongMaterial({ color: 0xffffff * Math.random() });
+			// 		const mesh = new THREE.Mesh(geometry, material);
+			// 		reticle.matrix.decompose(mesh.position, mesh.quaternion, mesh.scale);
+			// 		mesh.scale.y = Math.random() * 2 + 1;
+			// 		scene.add(mesh);
 
-				}
+			// 	}
 
-			}
-
-
-
-
-			// 3Dモデル1
-			// 下で使用するため
-			let currentModel1 = null; // currentModel1 変数を定義
-
-			// 新しく3Dモデルを表示する際、表示済みの3Dモデルを消す
-			function loadModel1() {
-				if (currentModel1) scene.remove(currentModel1); // 既存のモデルを削除
-
-				const loader = new GLTFLoader();
-
-				loader.load(
-					'cube_small.glb',
-					function (gltf) {
-						const model = gltf.scene;
-						const position = new THREE.Vector3();
-						const quaternion = new THREE.Quaternion();
-						const scale = new THREE.Vector3();
-
-
-						// 3Dモデルの明るさ設定
-						// マテリアル用の変数
-						const materials = model.children[0].material;
-						// マテリアルの明るさを調整
-						materials.emissive = new THREE.Color(0.5, 0.5, 0.5); // 発光を白に設定
-						// モデルに調整したマテリアルを適用
-						model.children[0].material = materials;
-
-
-						reticle.matrix.decompose(position, quaternion, scale);
-						model.position.copy(position);
-						model.quaternion.copy(quaternion);
-						model.scale.copy(scale);
-						// シーンにモデルを追加
-						scene.add(model);
-
-						currentModel1 = model; // 新しいモデルを保持
-					},
-					function (xhr) {
-						console.log((xhr.loaded / xhr.total) * 100 + '% loaded');
-					},
-					function (error) {
-						console.error('An error happened', error);
-					}
-				);
-			}
+			// }
 
 
 
 
-			// 3Dモデル2
-			// 下で使用するため
-			let currentModel2 = null; // currentModel2 変数を定義
+			// // 3Dモデル1
+			// // 下で使用するため
+			// let currentModel1 = null; // currentModel1 変数を定義
+
+			// // 新しく3Dモデルを表示する際、表示済みの3Dモデルを消す
+			// function loadModel1() {
+			// 	if (currentModel1) scene.remove(currentModel1); // 既存のモデルを削除
+
+			// 	const loader = new GLTFLoader();
+
+			// 	loader.load(
+			// 		'cube_small.glb',
+			// 		function (gltf) {
+			// 			const model = gltf.scene;
+			// 			const position = new THREE.Vector3();
+			// 			const quaternion = new THREE.Quaternion();
+			// 			const scale = new THREE.Vector3();
+
+
+			// 			// 3Dモデルの明るさ設定
+			// 			// マテリアル用の変数
+			// 			const materials = model.children[0].material;
+			// 			// マテリアルの明るさを調整
+			// 			materials.emissive = new THREE.Color(0.5, 0.5, 0.5); // 発光を白に設定
+			// 			// モデルに調整したマテリアルを適用
+			// 			model.children[0].material = materials;
+
+
+			// 			reticle.matrix.decompose(position, quaternion, scale);
+			// 			model.position.copy(position);
+			// 			model.quaternion.copy(quaternion);
+			// 			model.scale.copy(scale);
+			// 			// シーンにモデルを追加
+			// 			scene.add(model);
+
+			// 			currentModel1 = model; // 新しいモデルを保持
+			// 		},
+			// 		function (xhr) {
+			// 			console.log((xhr.loaded / xhr.total) * 100 + '% loaded');
+			// 		},
+			// 		function (error) {
+			// 			console.error('An error happened', error);
+			// 		}
+			// 	);
+			// }
 
 
 
-			// 新しく3Dモデルを表示するため、表示済みの3Dモデルを消す
-			function removeMode2() {
-				return new Promise(resolve => {
-					if (currentModel1) {
-						scene.remove(currentModel2); // 古いモデルを削除
-						currentModel2 = null;
-					}
-					resolve();
-				});
-			}
+
+			// // 3Dモデル2
+			// // 下で使用するため
+			// let currentModel2 = null; // currentModel2 変数を定義
 
 
 
-			// 新しく3Dモデルを表示する
-			function loadModel2() {
-				// if (currentModel2) scene.remove(currentModel2); // 既存のモデルを削除
-
-				const loader = new GLTFLoader();
-
-				loader.load(
-					'cube_medium.glb',
-					function (gltf) {
-						const model = gltf.scene;
-						const position = new THREE.Vector3();
-						const quaternion = new THREE.Quaternion();
-						const scale = new THREE.Vector3();
+			// // 新しく3Dモデルを表示するため、表示済みの3Dモデルを消す
+			// function removeMode2() {
+			// 	return new Promise(resolve => {
+			// 		if (currentModel1) {
+			// 			scene.remove(currentModel2); // 古いモデルを削除
+			// 			currentModel2 = null;
+			// 		}
+			// 		resolve();
+			// 	});
+			// }
 
 
-						// 3Dモデルの明るさ設定
-						// マテリアル用の変数
-						const materials = model.children[0].material;
-						// マテリアルの明るさを調整
-						materials.emissive = new THREE.Color(0.5, 0.5, 0.5); // 発光を白に設定
-						// モデルに調整したマテリアルを適用
-						model.children[0].material = materials;
+
+			// // 新しく3Dモデルを表示する
+			// function loadModel2() {
+			// 	// if (currentModel2) scene.remove(currentModel2); // 既存のモデルを削除
+
+			// 	const loader = new GLTFLoader();
+
+			// 	loader.load(
+			// 		'cube_medium.glb',
+			// 		function (gltf) {
+			// 			const model = gltf.scene;
+			// 			const position = new THREE.Vector3();
+			// 			const quaternion = new THREE.Quaternion();
+			// 			const scale = new THREE.Vector3();
 
 
-						reticle.matrix.decompose(position, quaternion, scale);
-						model.position.copy(position);
-						model.quaternion.copy(quaternion);
-						model.scale.copy(scale);
-						// シーンにモデルを追加
-						scene.add(model);
+			// 			// 3Dモデルの明るさ設定
+			// 			// マテリアル用の変数
+			// 			const materials = model.children[0].material;
+			// 			// マテリアルの明るさを調整
+			// 			materials.emissive = new THREE.Color(0.5, 0.5, 0.5); // 発光を白に設定
+			// 			// モデルに調整したマテリアルを適用
+			// 			model.children[0].material = materials;
 
-						currentModel2 = model; // 新しいモデルを保持
-					},
-					function (xhr) {
-						console.log((xhr.loaded / xhr.total) * 100 + '% loaded');
-					},
-					function (error) {
-						console.error('An error happened', error);
-					}
-				);
-			}
+
+			// 			reticle.matrix.decompose(position, quaternion, scale);
+			// 			model.position.copy(position);
+			// 			model.quaternion.copy(quaternion);
+			// 			model.scale.copy(scale);
+			// 			// シーンにモデルを追加
+			// 			scene.add(model);
+
+			// 			currentModel2 = model; // 新しいモデルを保持
+			// 		},
+			// 		function (xhr) {
+			// 			console.log((xhr.loaded / xhr.total) * 100 + '% loaded');
+			// 		},
+			// 		function (error) {
+			// 			console.error('An error happened', error);
+			// 		}
+			// 	);
+			// }
 
 
 
@@ -341,53 +359,53 @@
 
 
 
-			// モデル1
-			controller.addEventListener('select', loadModel1);
-			// モデル2
-			controller.addEventListener('select', removeMode2);	//古いモデルを消す
-			controller.addEventListener('select', loadModel2);	//新しいモデルを表示
+			// // モデル1
+			// controller.addEventListener('select', loadModel1);
+			// // モデル2
+			// controller.addEventListener('select', removeMode2);	//古いモデルを消す
+			// controller.addEventListener('select', loadModel2);	//新しいモデルを表示
 
 
 
-			// モデル1
-			// カスタムイベントを受け取って条件を再評価する
-			function model1_event_fun() {
-				if (ARButton.model1_display === 0) {
-					controller.removeEventListener('select', loadModel1);
-					// toggleButton.textContent = 'ボタン (無効)';
-					console.log('確認 0');
-				} else {
-					controller.addEventListener('select', loadModel1);
-					// toggleButton.textContent = 'ボタン (有効)';
-					console.log('確認 1');
-				}
-			}
+			// // モデル1
+			// // カスタムイベントを受け取って条件を再評価する
+			// function model1_event_fun() {
+			// 	if (ARButton.model1_display === 0) {
+			// 		controller.removeEventListener('select', loadModel1);
+			// 		// toggleButton.textContent = 'ボタン (無効)';
+			// 		console.log('確認 0');
+			// 	} else {
+			// 		controller.addEventListener('select', loadModel1);
+			// 		// toggleButton.textContent = 'ボタン (有効)';
+			// 		console.log('確認 1');
+			// 	}
+			// }
 
-			// カスタムイベントを監視して、ARButton.model1_display の値に応じて条件を再評価する
-			document.addEventListener('m1_event', model1_event_fun);
-
-
+			// // カスタムイベントを監視して、ARButton.model1_display の値に応じて条件を再評価する
+			// document.addEventListener('m1_event', model1_event_fun);
 
 
 
 
 
-			// モデル2
-			// カスタムイベントを受け取って条件を再評価する
-			function handleARButtonQChangedEvent() {
-				if (ARButton.model2_display === 0) {
-					controller.removeEventListener('select', loadModel2);
-					// toggleButton.textContent = 'ボタン (無効)';
-					console.log('確認 0');
-				} else {
-					controller.addEventListener('select', loadModel2);
-					// toggleButton.textContent = 'ボタン (有効)';
-					console.log('確認 1');
-				}
-			}
 
-			// カスタムイベントを監視して、ARButton.model2_display の値に応じて条件を再評価する
-			document.addEventListener('arButtonQChanged', handleARButtonQChangedEvent);
+
+			// // モデル2
+			// // カスタムイベントを受け取って条件を再評価する
+			// function handleARButtonQChangedEvent() {
+			// 	if (ARButton.model2_display === 0) {
+			// 		controller.removeEventListener('select', loadModel2);
+			// 		// toggleButton.textContent = 'ボタン (無効)';
+			// 		console.log('確認 0');
+			// 	} else {
+			// 		controller.addEventListener('select', loadModel2);
+			// 		// toggleButton.textContent = 'ボタン (有効)';
+			// 		console.log('確認 1');
+			// 	}
+			// }
+
+			// // カスタムイベントを監視して、ARButton.model2_display の値に応じて条件を再評価する
+			// document.addEventListener('arButtonQChanged', handleARButtonQChangedEvent);
 
 
 
